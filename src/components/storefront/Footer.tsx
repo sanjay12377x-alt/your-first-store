@@ -70,18 +70,18 @@ export function Footer() {
               Curating timeless elegance for the modern connoisseur since 2024.
             </p>
             <div className="flex gap-4">
-              <a href="#" className="text-primary-foreground/70 hover:text-gold transition-colors">
+              <button onClick={() => window.open('https://instagram.com', '_blank')} className="text-primary-foreground/70 hover:text-gold transition-colors">
                 <Instagram className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-primary-foreground/70 hover:text-gold transition-colors">
+              </button>
+              <button onClick={() => window.open('https://facebook.com', '_blank')} className="text-primary-foreground/70 hover:text-gold transition-colors">
                 <Facebook className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-primary-foreground/70 hover:text-gold transition-colors">
+              </button>
+              <button onClick={() => window.open('https://twitter.com', '_blank')} className="text-primary-foreground/70 hover:text-gold transition-colors">
                 <Twitter className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-primary-foreground/70 hover:text-gold transition-colors">
+              </button>
+              <button onClick={() => window.open('mailto:hello@luxe.com', '_blank')} className="text-primary-foreground/70 hover:text-gold transition-colors">
                 <Mail className="h-5 w-5" />
-              </a>
+              </button>
             </div>
           </div>
 

@@ -2,6 +2,10 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
 export function Hero() {
+  const scrollToProducts = () => {
+    document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <section className="relative min-h-[70vh] lg:min-h-[85vh] flex items-center justify-center overflow-hidden bg-champagne">
       {/* Background Pattern */}
@@ -40,6 +44,7 @@ export function Hero() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 animate-fade-in" style={{ animationDelay: '0.3s' }}>
             <Button 
               size="lg" 
+              onClick={scrollToProducts}
               className="bg-charcoal hover:bg-charcoal/90 text-primary-foreground font-body uppercase tracking-widest text-xs px-10 py-6"
             >
               Shop Collection
@@ -48,6 +53,7 @@ export function Hero() {
             <Button 
               variant="outline" 
               size="lg"
+              onClick={scrollToProducts}
               className="border-charcoal text-charcoal hover:bg-charcoal hover:text-primary-foreground font-body uppercase tracking-widest text-xs px-10 py-6"
             >
               Explore Lookbook
