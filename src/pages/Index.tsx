@@ -1,6 +1,7 @@
 import { Header } from "@/components/storefront/Header";
 import { Hero } from "@/components/storefront/Hero";
 import { ProductGrid } from "@/components/storefront/ProductGrid";
+import { VideoAd } from "@/components/storefront/VideoAd";
 import { Footer } from "@/components/storefront/Footer";
 import { Helmet } from "react-helmet-async";
 
@@ -16,6 +17,7 @@ const Index = () => {
         <Header />
         <main>
           <Hero />
+          <VideoAd />
           <ProductGrid />
           
           {/* Trust Badges Section */}
