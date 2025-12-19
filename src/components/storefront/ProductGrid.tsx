@@ -19,7 +19,7 @@ export function ProductGrid() {
 
   if (isLoading) {
     return (
-      <section className="py-16 lg:py-24 bg-background">
+      <section id="products" className="py-16 lg:py-24 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <Skeleton className="h-8 w-48 mx-auto mb-4" />
@@ -40,8 +40,8 @@ export function ProductGrid() {
   }
 
   if (products.length === 0) {
-  return (
-    <section id="products" className="py-16 lg:py-24 bg-background">
+    return (
+      <section id="products" className="py-16 lg:py-24 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
@@ -67,22 +67,22 @@ export function ProductGrid() {
   }
 
   return (
-    <section className="py-16 lg:py-24 bg-background">
+    <section id="products" className="py-16 lg:py-24 bg-background">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-12 lg:mb-16">
-          <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
+          <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4 animate-fade-in">
             Our Collection
           </p>
-          <h2 className="font-display text-3xl md:text-5xl font-light text-foreground">
+          <h2 className="font-display text-3xl md:text-5xl font-light text-foreground animate-fade-in" style={{ animationDelay: '0.1s' }}>
             Featured Products
           </h2>
         </div>
 
         {/* Products Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
-          {products.map((product) => (
-            <ProductCard key={product.node.id} product={product} />
+          {products.map((product, index) => (
+            <ProductCard key={product.node.id} product={product} index={index} />
           ))}
         </div>
       </div>
