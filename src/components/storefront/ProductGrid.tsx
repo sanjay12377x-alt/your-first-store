@@ -40,8 +40,8 @@ export function ProductGrid() {
   }
 
   if (products.length === 0) {
-    return (
-      <section className="py-16 lg:py-24 bg-background">
+  return (
+    <section id="products" className="py-16 lg:py-24 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">

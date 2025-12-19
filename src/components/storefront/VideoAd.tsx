@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,7 +7,9 @@ import {
 } from "@/components/ui/dialog";
 
 export function VideoAd() {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const scrollToProducts = () => {
+    document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <section className="py-16 lg:py-24 bg-charcoal text-primary-foreground overflow-hidden">
@@ -29,6 +30,7 @@ export function VideoAd() {
             </p>
             <Button 
               variant="outline" 
+              onClick={scrollToProducts}
               className="border-gold text-gold hover:bg-gold hover:text-charcoal font-body uppercase tracking-widest text-xs px-8 py-5"
             >
               Explore Collection
