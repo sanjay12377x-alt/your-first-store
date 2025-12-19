@@ -1,12 +1,27 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { fetchProductByHandle, formatPrice } from "@/lib/shopify";
+import { fetchProductByHandle, fetchProducts, formatPrice, ShopifyProduct } from "@/lib/shopify";
 import { useCartStore } from "@/stores/cartStore";
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft, Minus, Plus, ShoppingBag, Check } from "lucide-react";
+import { ProductCard } from "@/components/storefront/ProductCard";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Minus, Plus, ShoppingBag, Check, Share2, Copy, Truck, RotateCcw, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 interface ProductNode {
@@ -54,6 +69,7 @@ interface ProductNode {
 export default function ProductDetail() {
   const { handle } = useParams<{ handle: string }>();
   const [product, setProduct] = useState<ProductNode | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<ShopifyProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
@@ -78,10 +94,15 @@ export default function ProductDetail() {
         });
         setSelectedOptions(initialOptions);
       }
+
+      // Fetch related products
+      const allProducts = await fetchProducts(5);
+      setRelatedProducts(allProducts.filter((p: ShopifyProduct) => p.node.handle !== handle).slice(0, 4));
       
       setIsLoading(false);
     }
     loadProduct();
+    window.scrollTo(0, 0);
   }, [handle]);
 
   const selectedVariant = product?.variants.edges.find((variant) => {
@@ -108,11 +129,21 @@ export default function ProductDetail() {
     });
   };
 
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard", { position: "top-center" });
+    } catch {
+      toast.error("Failed to copy link");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-12">
+          <Skeleton className="h-4 w-48 mb-8" />
           <div className="grid md:grid-cols-2 gap-12">
             <Skeleton className="aspect-square w-full" />
             <div className="space-y-6">
@@ -145,6 +176,7 @@ export default function ProductDetail() {
   }
 
   const images = product.images.edges;
+  const isInStock = selectedVariant?.availableForSale;
 
   return (
     <div className="min-h-screen bg-background">
@@ -152,24 +184,36 @@ export default function ProductDetail() {
       
       <main className="container mx-auto px-4 py-8 lg:py-12">
         {/* Breadcrumb */}
-        <Link 
-          to="/" 
-          className="inline-flex items-center text-sm font-body text-muted-foreground hover:text-foreground transition-colors mb-8"
-        >
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Back to Shop
-        </Link>
+        <Breadcrumb className="mb-8">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/" className="font-body text-xs uppercase tracking-widest">Home</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/#products" className="font-body text-xs uppercase tracking-widest">Shop</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="font-body text-xs uppercase tracking-widest">{product.title}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
           {/* Images */}
           <div className="space-y-4">
             {/* Main Image */}
-            <div className="aspect-square bg-secondary/30 overflow-hidden">
+            <div className="aspect-square bg-secondary/30 overflow-hidden group cursor-zoom-in">
               {images[selectedImage]?.node ? (
                 <img
                   src={images[selectedImage].node.url}
                   alt={images[selectedImage].node.altText || product.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -185,8 +229,8 @@ export default function ProductDetail() {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`flex-shrink-0 w-20 h-20 overflow-hidden border-2 transition-colors ${
-                      selectedImage === index ? "border-gold" : "border-transparent"
+                    className={`flex-shrink-0 w-20 h-20 overflow-hidden border-2 transition-all duration-300 ${
+                      selectedImage === index ? "border-gold" : "border-transparent hover:border-border"
                     }`}
                   >
                     <img
@@ -202,13 +246,30 @@ export default function ProductDetail() {
 
           {/* Product Info */}
           <div className="lg:py-4">
-            <h1 className="font-display text-3xl lg:text-4xl font-medium mb-4">
+            {/* Stock Status */}
+            <div className="flex items-center gap-2 mb-4">
+              <span className={`w-2 h-2 rounded-full ${isInStock ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="font-body text-xs uppercase tracking-widest text-muted-foreground">
+                {isInStock ? 'In Stock' : 'Out of Stock'}
+              </span>
+            </div>
+
+            <h1 className="font-display text-3xl lg:text-4xl font-medium mb-4 animate-fade-in">
               {product.title}
             </h1>
 
             <p className="font-display text-2xl text-gold mb-6">
               {selectedVariant && formatPrice(selectedVariant.price.amount, selectedVariant.price.currencyCode)}
             </p>
+
+            {/* Share Button */}
+            <button 
+              onClick={handleShare}
+              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
+            >
+              <Share2 className="w-4 h-4" />
+              <span className="font-body text-xs uppercase tracking-widest">Share</span>
+            </button>
 
             {/* Options */}
             {product.options.map((option) => {
@@ -224,7 +285,7 @@ export default function ProductDetail() {
                       <button
                         key={value}
                         onClick={() => setSelectedOptions({ ...selectedOptions, [option.name]: value })}
-                        className={`px-4 py-2 border font-body text-sm transition-all ${
+                        className={`px-4 py-2 border font-body text-sm transition-all duration-300 ${
                           selectedOptions[option.name] === value
                             ? "border-charcoal bg-charcoal text-primary-foreground"
                             : "border-border hover:border-charcoal"
@@ -267,47 +328,85 @@ export default function ProductDetail() {
             {/* Add to Cart */}
             <Button
               onClick={handleAddToCart}
-              disabled={!selectedVariant?.availableForSale}
-              className="w-full bg-charcoal hover:bg-charcoal/90 text-primary-foreground font-body uppercase tracking-widest text-xs py-6 mb-6"
+              disabled={!isInStock}
+              className="w-full bg-charcoal hover:bg-charcoal/90 text-primary-foreground font-body uppercase tracking-widest text-xs py-6 mb-8 transition-all duration-300 hover:shadow-elegant"
               size="lg"
             >
               <ShoppingBag className="w-4 h-4 mr-2" />
-              {selectedVariant?.availableForSale ? "Add to Bag" : "Out of Stock"}
+              {isInStock ? "Add to Bag" : "Out of Stock"}
             </Button>
 
-            {/* Description */}
-            {product.description && (
-              <div className="border-t border-border pt-8">
-                <h3 className="font-display text-lg mb-4">Description</h3>
-                <p className="font-body text-muted-foreground leading-relaxed">
-                  {product.description}
-                </p>
+            {/* Trust Badges */}
+            <div className="grid grid-cols-3 gap-4 py-6 border-y border-border mb-6">
+              <div className="text-center">
+                <Truck className="w-5 h-5 mx-auto mb-2 text-gold" />
+                <p className="font-body text-xs text-muted-foreground">Free Shipping</p>
               </div>
-            )}
-
-            {/* Features */}
-            <div className="border-t border-border pt-8 mt-8">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-3">
-                  <Check className="h-4 w-4 text-gold" />
-                  <span className="font-body text-sm">Free Shipping</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-4 w-4 text-gold" />
-                  <span className="font-body text-sm">Easy Returns</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-4 w-4 text-gold" />
-                  <span className="font-body text-sm">Secure Checkout</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-4 w-4 text-gold" />
-                  <span className="font-body text-sm">Premium Quality</span>
-                </div>
+              <div className="text-center">
+                <RotateCcw className="w-5 h-5 mx-auto mb-2 text-gold" />
+                <p className="font-body text-xs text-muted-foreground">Easy Returns</p>
+              </div>
+              <div className="text-center">
+                <Shield className="w-5 h-5 mx-auto mb-2 text-gold" />
+                <p className="font-body text-xs text-muted-foreground">Secure Checkout</p>
               </div>
             </div>
+
+            {/* Accordion Details */}
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="description" className="border-border">
+                <AccordionTrigger className="font-body text-sm uppercase tracking-widest hover:no-underline">
+                  Description
+                </AccordionTrigger>
+                <AccordionContent className="font-body text-muted-foreground leading-relaxed">
+                  {product.description || "No description available."}
+                </AccordionContent>
+              </AccordionItem>
+              
+              <AccordionItem value="shipping" className="border-border">
+                <AccordionTrigger className="font-body text-sm uppercase tracking-widest hover:no-underline">
+                  Shipping & Returns
+                </AccordionTrigger>
+                <AccordionContent className="font-body text-muted-foreground leading-relaxed space-y-2">
+                  <p>• Free standard shipping on orders over $500</p>
+                  <p>• Express shipping available at checkout</p>
+                  <p>• 30-day return policy for unworn items</p>
+                  <p>• Items must be returned in original packaging</p>
+                </AccordionContent>
+              </AccordionItem>
+              
+              <AccordionItem value="care" className="border-border">
+                <AccordionTrigger className="font-body text-sm uppercase tracking-widest hover:no-underline">
+                  Care Instructions
+                </AccordionTrigger>
+                <AccordionContent className="font-body text-muted-foreground leading-relaxed space-y-2">
+                  <p>• Store in a cool, dry place</p>
+                  <p>• Avoid direct sunlight</p>
+                  <p>• Follow care label instructions</p>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         </div>
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <section className="mt-20 pt-16 border-t border-border">
+            <div className="text-center mb-12">
+              <p className="font-body text-xs tracking-[0.3em] uppercase text-muted-foreground mb-4">
+                You May Also Like
+              </p>
+              <h2 className="font-display text-3xl font-light text-foreground">
+                Related Products
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {relatedProducts.map((product, index) => (
+                <ProductCard key={product.node.id} product={product} index={index} />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />
